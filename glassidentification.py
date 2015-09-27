@@ -142,7 +142,7 @@ def testing(traning_rules, test_rules):
 
 def main():
 	traning_rules = traning("data/glass.data")
-	#export_rule("training_rule", traning_rules)
+	export_rule("training_rule", traning_rules)
 	test_rules = generate_test_rule("data/test.data")
 	print(testing(traning_rules, test_rules))
 
