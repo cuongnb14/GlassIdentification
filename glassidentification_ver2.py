@@ -26,6 +26,33 @@ class Rule():
 		str_rule = "if " + condition + " then Y is "+str(self.result)+" ("+str(self.membership)+")"
 		return str_rule
 
+
+####### Function membership ##########
+
+def get_membership_of_low(attr_index, value):
+	"""Function membership of set Low
+
+	Return membership of attribute in fuzzy set Low
+	@param int attr_index, index of attribute
+	@param float value of attribute 
+	"""
+	minv = attr_value[attr_index][0]
+	maxv = attr_value[attr_index][1]
+	membership = (value - minv)/(maxv-minv)
+	return ((attr_index, 'L'), membership)
+
+def get_membership_of_height(attr_index, value):
+	"""Function membership of set Height
+
+	Return membership of attribute in fuzzy set Height
+	@param int attr_index, index of attribute
+	@param float value of attribute 
+	"""
+	minv = attr_value[attr_index][0]
+	maxv = attr_value[attr_index][1]
+	membership = (value - maxv)/(minv-maxv)
+	return ((attr_index, 'H'), membership)
+
 def get_membership (attr_index, value):
 	"""Function membership
 
@@ -33,12 +60,14 @@ def get_membership (attr_index, value):
 	@param int attr_index, index of attribute
 	@param float value, value of attribute  
 	"""
-	height_membership = (attr_value[attr_index][1] - value)/(attr_value[attr_index][1] - attr_value[attr_index][0])
-	if(height_membership < 0.5):
-		return ((attr_index, 'L'), 1 - height_membership)
-	else:
-		return ((attr_index, 'H'), height_membership)
+	memberships = []
+	memberships.append(get_membership_of_low(attr_index, value))
+	memberships.append(get_membership_of_height(attr_index, value))
 
+	return max(memberships, key=lambda p: p[1])
+
+
+######## End Function membership #######
 def generate_training_rule(data_line):
 	"""Return Rule correspond with data_line
 	
