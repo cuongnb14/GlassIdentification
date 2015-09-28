@@ -36,7 +36,7 @@ Chú ý (bỏ thuộc tính id)
 - Loại bỏ các luật có chung vế trái, chỉ giữ lại luật có độ thuộc lớn nhất
 
 ##3. Testing
-- Tương tự với tập học, với mỗi bộ thuộc tính đầu vào mờ hóa thành các luật với độ thuộc của bộ điều kiện là giá trị nhỏ nhất của độ thuộc mỗi thuộc tính => Mỗi bộ có nhiều luật (cụ thể với bộ dữ liệu này là 2^9 luật)
+- Tương tự với tập học, với mỗi bộ thuộc tính đầu vào mờ hóa thành các luật với độ thuộc của bộ điều kiện là giá trị nhỏ nhất của độ thuộc mỗi thuộc tính => Mỗi bộ sẽ sinh ra nhiều luật (cụ thể với bộ dữ liệu này là 2^9 luật)
 - Để giảm thiểu số luật được sinh ra ta thực hiện lấy ngưỡng: Giá trị độ thuộc của thuộc tính phải lớn hơn a thì mới cho vào luật.
 - Với mỗi bộ sẽ sinh ra được một tập luật (có chung kết quả khác điều kiện), lần lượt so phần sự kiện với mỗi luật trong bộ training nếu khớp thì đưa vào tập luật kết quả kèm với độ chắc chắn là tích của độ thuộc của bộ điều kiện trong tập test nhân với độ thuộc của luật
 - Từ tập luật kết quả chọn luật có độ chắc chắn lớn nhất và so sánh kết quả đầu ra thực tế.
