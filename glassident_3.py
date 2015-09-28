@@ -5,6 +5,11 @@
 from statistics import *
 import logging
 import sys
+from sys import argv
+import os
+import json
+import pickle
+from configs import *
 
 logger = logging.getLogger("fs")
 
@@ -90,10 +95,11 @@ def generate_training_rule(data_line):
 			if(xi[1] < min_membership):
 				min_membership = xi[1]
 	rule = Rule(condition, data_line[10], min_membership)
+	logger.info("result: "+str(rule))
 	return rule
 
 def append_rule(new_rule, rules):
-	"""Append new rule in to traning rules
+	"""Append new rule in to training rules
 	
 	@param Rule new_rule
 	@param list rules	
@@ -112,15 +118,20 @@ def append_rule(new_rule, rules):
 	return 1
 
 def is_up_therson(membership):
-	if(membership[1] > 0.4):
+	if(membership[1] > condition_threshold):
 		return True
 	return False
 
 def generate_test_rule(file_name):
-	logger.info("start generate test rule")
+	"""Generate rules for testing
+	
+	@param string file_name, path to file test data
+	"""
+	logger.info("start generate test rules")
 	data = open(file_name)
 	rules = []
 	for data_line in data:
+		logger.info("process: "+data_line)
 		condition = []
 		data_line = list(map(float, data_line.split(',')))
 		for i in range(len(data_line)):
@@ -131,7 +142,6 @@ def generate_test_rule(file_name):
 				memberships = list(filter(is_up_therson, memberships))
 				condition.append(memberships)
 		conditions = [(x0,x1,x2,x3,x4,x5,x6,x7,x8) for x0 in condition[0] for x1 in condition[1] for x2 in condition[2] for x3 in condition[3] for x4 in condition[4] for x5 in condition[5] for x6 in condition[6] for x7 in condition[7] for x8 in condition[8] ]
-
 		rule = (conditions, data_line[10])
 		logger.info("append new rule: "+str(rule))	
 		rules.append(rule)
@@ -139,19 +149,20 @@ def generate_test_rule(file_name):
 	data.close()
 	return rules
 
-def traning(file_name):
-	"""Create set traning rules
+def training(file_name):
+	"""Create set training rules
 	
 	@param string path to file data
 	@return list<Rule> 
 	"""
-	logger.info("start generate traning rule")
+	logger.info("start generate training rule")
 	data = open(file_name)
 	rules = []
 	for line in data:
+		logger.info("process: "+line)
 		rule = generate_training_rule(line)	
 		append_rule(rule, rules)
-	logger.info("finish generate traning rule")
+	logger.info("finish generate training rule")
 	data.close()
 	return rules
 	
@@ -167,48 +178,62 @@ def export_rule(file_name, rules):
 	for rule in rules:
 		logger.info("export rule: "+str(rule))
 		frules.write(str(rule)+"\n")
-	logger.info("finish export rule")
+	logger.info("finish export rule.")
 	frules.close()
 
-def testing(traning_rules, test_rules):
-	logger.info("start testing")
+def testing(training_rules, test_rules):
+	logger.info("start testing...")
 	total = len(test_rules)
 	error = 0
 	success = 0
 	unknown = 0
-	i = 0
 	for test_rule in test_rules:
 		rule_result = None
 		max_membership = 0
+		logger.info("testing rule:")
 		for condition in test_rule[0]:
-			logger.info("test rule: "+str(test_rule))
 			temp_con = [x[0] for x in condition]
-			for traning_rule in traning_rules:
-				if (temp_con == traning_rule.condition):
+			logger.info(str(temp_con))
+			for training_rule in training_rules:
+				if (temp_con == training_rule.condition):
 					membership_condition = min(condition, key=lambda p: p[1])
-					membership_rule = membership_condition[1] * traning_rule.membership
+					membership_rule = membership_condition[1] * training_rule.membership
 					if(membership_rule > max_membership):
 						max_membership = membership_rule
-						rule_result = traning_rule
+						rule_result = training_rule
 					break
-
 		if(rule_result != None):
 			if(test_rule[1] == rule_result.result):
+				logger.info("result: success")
 				success += 1
 			else:
+				logger.info("result: error")
 				error += 1
 		else:
+			logger.info("result: unknown")
 			unknown += 1
-		
+	logger.info("finish testing.")
 	return {'total': total, 'error': error, 'success': success, 'unknown': unknown, 'accuracy': success*100/total}
 
 def main():
-	traning_rules = traning("data/glass.data")
-	#export_rule("training_rule", traning_rules)
-	test_rules = generate_test_rule("data/test.data")
-	print(testing(traning_rules, test_rules))
+	if (argv[1] == "training"):
+		file_name = argv[2]
+		training_rules = training(file_name)
+		export_rule("training/training_rule", training_rules)
+		with open(training_file, 'wb') as f:
+			pickle.dump(training_rules, f)
+	elif (argv[1] == "testing"):
+		file_name = argv[2]
+		if(os.path.isfile(training_file)):
+			with open(training_file, 'rb') as f:
+				training_rules = pickle.load(f) 		
+				test_rules = generate_test_rule(file_name)
+				print("Result:")
+				print(testing(training_rules, test_rules))
+		else:
+			logger.error("System not yet training!")
 
 if __name__ == "__main__":
-	logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-	logger.setLevel(logging.ERROR)
+	logging.basicConfig(stream=sys.stderr, level=logging.DEBUG,format='%(message)s')
+	logger.setLevel(logging.INFO)
 	main()
